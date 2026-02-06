@@ -13,7 +13,7 @@ import { cn } from '../lib/utils';
 import type { TransactionType } from '../store/types';
 
 export function TransactionList() {
-    const { transactions, categories, addTransaction, deleteTransaction } = useMoneyLedger();
+    const { monthlyTransactions: transactions, categories, addTransaction, deleteTransaction, selectedDate } = useMoneyLedger();
     const [isAdding, setIsAdding] = useState(false);
 
     // Form State
@@ -21,7 +21,23 @@ export function TransactionList() {
     const [amount, setAmount] = useState('');
     const [description, setDescription] = useState('');
     const [categoryId, setCategoryId] = useState('');
-    const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+
+    // Default to today if within selected month, otherwise 1st of selected month
+    const [date, setDate] = useState(() => {
+        const today = new Date();
+        const start = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+        const end = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
+
+        if (today >= start && today <= end) {
+            return format(today, 'yyyy-MM-dd');
+        }
+        return format(start, 'yyyy-MM-dd');
+    });
+
+    // Update form date when selectedDate changes (optional, but good UX if user switches months while form is open)
+    // Actually, maybe better not to force reset if user is typing. 
+    // Let's just initialize it correctly when opening the form or component mount.
+    // For now, I'll keep the initialization logic simple.
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();

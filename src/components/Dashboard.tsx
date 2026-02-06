@@ -7,7 +7,7 @@ import { ArrowDownIcon, ArrowUpIcon, DollarSign } from 'lucide-react';
 import { cn } from '../lib/utils'; // Make sure this import is correct based on your file structure
 
 export function Dashboard() {
-    const { transactions, categories } = useMoneyLedger();
+    const { monthlyTransactions: transactions, categories } = useMoneyLedger();
 
     const summary = useMemo(() => {
         const income = transactions

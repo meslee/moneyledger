@@ -1,9 +1,15 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import type { Category, MoneyLedgerState, Transaction } from './types';
 import { DEFAULT_CATEGORIES } from './types';
 import { supabase } from '../lib/supabase';
+import { addMonths, startOfMonth, endOfMonth, isWithinInterval, subMonths } from 'date-fns';
 
 interface MoneyLedgerContextType extends MoneyLedgerState {
+    monthlyTransactions: Transaction[];
+    selectedDate: Date;
+    setSelectedDate: (date: Date) => void;
+    nextMonth: () => void;
+    prevMonth: () => void;
     addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<void>;
     updateTransaction: (transaction: Transaction) => Promise<void>;
     deleteTransaction: (id: string) => Promise<void>;
@@ -20,6 +26,7 @@ export function MoneyLedgerProvider({ children }: { children: React.ReactNode })
         categories: DEFAULT_CATEGORIES
     });
     const [loading, setLoading] = useState(true);
+    const [selectedDate, setSelectedDate] = useState(new Date());
 
     // Fetch initial data
     useEffect(() => {
@@ -57,6 +64,18 @@ export function MoneyLedgerProvider({ children }: { children: React.ReactNode })
             setLoading(false);
         }
     };
+
+    const monthlyTransactions = useMemo(() => {
+        const start = startOfMonth(selectedDate);
+        const end = endOfMonth(selectedDate);
+
+        return data.transactions.filter(t =>
+            isWithinInterval(new Date(t.date), { start, end })
+        );
+    }, [data.transactions, selectedDate]);
+
+    const nextMonth = () => setSelectedDate(prev => addMonths(prev, 1));
+    const prevMonth = () => setSelectedDate(prev => subMonths(prev, 1));
 
     const addTransaction = async (input: Omit<Transaction, 'id'>) => {
         try {
@@ -161,6 +180,11 @@ export function MoneyLedgerProvider({ children }: { children: React.ReactNode })
     return (
         <MoneyLedgerContext.Provider value={{
             ...data,
+            monthlyTransactions,
+            selectedDate,
+            setSelectedDate,
+            nextMonth,
+            prevMonth,
             addTransaction,
             updateTransaction,
             deleteTransaction,
