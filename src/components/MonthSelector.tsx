@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
 export function MonthSelector() {
-    const { selectedDate, nextMonth, prevMonth } = useMoneyLedger();
+    const { selectedDate, nextMonth, prevMonth, language } = useMoneyLedger();
 
     return (
         <div className="flex items-center gap-2">
@@ -13,7 +13,9 @@ export function MonthSelector() {
                 <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="min-w-[100px] text-center font-medium">
-                {format(selectedDate, 'yyyy년 M월', { locale: ko })}
+                {language === 'ko'
+                    ? format(selectedDate, 'yyyy년 M월', { locale: ko })
+                    : format(selectedDate, 'MMM yyyy')}
             </span>
             <Button variant="ghost" size="icon" onClick={nextMonth}>
                 <ChevronRight className="h-4 w-4" />

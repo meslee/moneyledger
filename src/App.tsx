@@ -7,8 +7,11 @@ import { Auth } from './components/Auth';
 import { supabase } from './lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 
+import { SettingsPage } from './components/SettingsPage';
+import { StatisticsPage } from './components/StatisticsPage';
+
 function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions' | 'settings' | 'statistics'>('dashboard');
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -38,7 +41,10 @@ function App() {
   return (
     <MoneyLedgerProvider key={session.user.id}>
       <Layout activeTab={activeTab} onTabChange={setActiveTab}>
-        {activeTab === 'dashboard' ? <Dashboard /> : <TransactionList />}
+        {activeTab === 'dashboard' && <Dashboard />}
+        {activeTab === 'transactions' && <TransactionList />}
+        {activeTab === 'statistics' && <StatisticsPage />}
+        {activeTab === 'settings' && <SettingsPage />}
       </Layout>
     </MoneyLedgerProvider>
   );

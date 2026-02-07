@@ -4,10 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { format } from 'date-fns';
 import { ArrowDownIcon, ArrowUpIcon, DollarSign } from 'lucide-react';
-import { cn } from '../lib/utils'; // Make sure this import is correct based on your file structure
+import { cn } from '../lib/utils';
+import { translations } from '../lib/i18n';
 
 export function Dashboard() {
-    const { monthlyTransactions: transactions, categories } = useMoneyLedger();
+    const { monthlyTransactions: transactions, categories, language, dateFormat, formatMoney } = useMoneyLedger();
+    const t = translations[language];
 
     const summary = useMemo(() => {
         const income = transactions
@@ -36,63 +38,42 @@ export function Dashboard() {
             .map(([id, value]) => {
                 const category = categories.find(c => c.id === id);
                 return {
-                    name: category?.name || 'Unknown',
+                    name: category?.name || t.uncategorized,
                     value,
                     color: category?.color || '#cbd5e1'
                 };
             })
             .sort((a, b) => b.value - a.value);
-    }, [transactions, categories]);
-
-
-
-    // Date formatter
-
-
-    // Re-implement format for KRW context if needed. user's prompt was Korean.
-    // I will use `style: 'currency', currency: 'KRW'` if I want to be localized.
-    // But let's stick to generic number formatting to be safe? 
-    // Let's use `Won` or just numbers.
-    // I'll use standard local string in KR-locale.
-    const formatMoney = (val: number) => val.toLocaleString('ko-KR');
+    }, [transactions, categories, t.uncategorized]);
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
+                        <CardTitle className="text-sm font-medium">{t.totalBalance}</CardTitle>
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{formatMoney(summary.balance)} ₩</div>
-                        <p className="text-xs text-muted-foreground">
-                            Current net worth
-                        </p>
+                        <div className="text-2xl font-bold">{formatMoney(summary.balance)}</div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Income</CardTitle>
+                        <CardTitle className="text-sm font-medium">{t.monthlyIncome}</CardTitle>
                         <ArrowUpIcon className="h-4 w-4 text-emerald-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-emerald-600">+{formatMoney(summary.income)} ₩</div>
-                        <p className="text-xs text-muted-foreground">
-                            Total earnings
-                        </p>
+                        <div className="text-2xl font-bold text-emerald-600">+{formatMoney(summary.income)}</div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Expenses</CardTitle>
+                        <CardTitle className="text-sm font-medium">{t.monthlyExpenses}</CardTitle>
                         <ArrowDownIcon className="h-4 w-4 text-rose-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-rose-600">-{formatMoney(summary.expense)} ₩</div>
-                        <p className="text-xs text-muted-foreground">
-                            Total spending
-                        </p>
+                        <div className="text-2xl font-bold text-rose-600">-{formatMoney(summary.expense)}</div>
                     </CardContent>
                 </Card>
             </div>
@@ -100,7 +81,7 @@ export function Dashboard() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 <Card className="col-span-4">
                     <CardHeader>
-                        <CardTitle>Recent Transactions</CardTitle>
+                        <CardTitle>{t.recentTransactions}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-8">
@@ -115,24 +96,24 @@ export function Dashboard() {
                                         <div className="ml-4 space-y-1">
                                             <p className="text-sm font-medium leading-none">{t.description}</p>
                                             <p className="text-sm text-muted-foreground">
-                                                {category?.name} • {format(new Date(t.date), 'MMM d, yyyy')}
+                                                {category?.name} • {format(new Date(t.date), dateFormat)}
                                             </p>
                                         </div>
                                         <div className={cn("ml-auto font-medium", t.type === 'income' ? "text-emerald-600" : "text-foreground")}>
-                                            {t.type === 'income' ? '+' : '-'}{formatMoney(t.amount)} ₩
+                                            {t.type === 'income' ? '+' : '-'}{formatMoney(t.amount)}
                                         </div>
                                     </div>
                                 );
                             })}
                             {transactions.length === 0 && (
-                                <div className="text-center text-muted-foreground py-8">No transactions yet.</div>
+                                <div className="text-center text-muted-foreground py-8">{t.noTransactions}</div>
                             )}
                         </div>
                     </CardContent>
                 </Card>
                 <Card className="col-span-3">
                     <CardHeader>
-                        <CardTitle>Spending by Category</CardTitle>
+                        <CardTitle>{t.categoryBreakdown}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="h-[300px] w-full">
@@ -153,7 +134,7 @@ export function Dashboard() {
                                             ))}
                                         </Pie>
                                         <Tooltip
-                                            formatter={(value: any) => `${formatMoney(value)} ₩`}
+                                            formatter={(value: any) => `${formatMoney(value)}`}
                                             contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: 'var(--radius)' }}
                                         />
                                         <Legend />
@@ -161,7 +142,7 @@ export function Dashboard() {
                                 </ResponsiveContainer>
                             ) : (
                                 <div className="flex h-full items-center justify-center text-muted-foreground">
-                                    No expenses to display
+                                    {t.noTransactions}
                                 </div>
                             )}
                         </div>
