@@ -45,19 +45,33 @@ export function MoneyLedgerProvider({ children }: { children: React.ReactNode })
         return (localStorage.getItem('moneyledger_currency') as Currency) || 'KRW';
     });
 
+    const updateProfile = async (updates: any) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            await supabase.from('profiles').upsert({
+                id: user.id,
+                updated_at: new Date(),
+                ...updates
+            });
+        }
+    };
+
     const setLanguage = (lang: Language) => {
         setLanguageState(lang);
         localStorage.setItem('moneyledger_language', lang);
+        updateProfile({ language: lang });
     };
 
     const setDateFormat = (format: DateFormat) => {
         setDateFormatState(format);
         localStorage.setItem('moneyledger_dateFormat', format);
+        updateProfile({ date_format: format });
     };
 
     const setCurrency = (curr: Currency) => {
         setCurrencyState(curr);
         localStorage.setItem('moneyledger_currency', curr);
+        updateProfile({ currency: curr });
     };
 
     const formatMoney = (amount: number) => {
@@ -232,6 +246,40 @@ export function MoneyLedgerProvider({ children }: { children: React.ReactNode })
                 // Let's just set them in state for now, but mark them as "default" visually? Not needed.
                 // Let's use DEFAULT_CATEGORIES as initial state if DB is empty.
                 mappedCategories = DEFAULT_CATEGORIES;
+            }
+
+            // --- FETCH PROFILE SETTINGS ---
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            if (profile) {
+                // Sync DB Profile to Local State
+                if (profile.language) {
+                    setLanguageState(profile.language as Language);
+                    localStorage.setItem('moneyledger_language', profile.language);
+                }
+                if (profile.currency) {
+                    setCurrencyState(profile.currency as Currency);
+                    localStorage.setItem('moneyledger_currency', profile.currency);
+                }
+                if (profile.date_format) {
+                    setDateFormatState(profile.date_format as DateFormat);
+                    localStorage.setItem('moneyledger_dateFormat', profile.date_format);
+                }
+            } else {
+                // If no profile exists, create one with current defaults (or local storage values)
+                // This ensures we have a row to update later
+                // We use upsert to be safe against race conditions
+                await supabase.from('profiles').upsert({
+                    id: user.id,
+                    language: language, // use current state (from local storage defaults)
+                    currency: currency,
+                    date_format: dateFormat,
+                    updated_at: new Date()
+                });
             }
 
             setData({

@@ -24,6 +24,13 @@ export type DateFormat = 'yyyy-MM-dd' | 'dd/MM/yyyy' | 'MM/dd/yyyy' | 'yyyy. MM.
 
 export type Currency = 'KRW' | 'USD' | 'AUD';
 
+export interface Profile {
+    id: string;
+    language: Language;
+    currency: Currency;
+    date_format: DateFormat; // snake_case in DB
+}
+
 export interface MoneyLedgerState {
     user: User | null;
     transactions: Transaction[];
