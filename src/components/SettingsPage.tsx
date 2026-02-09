@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { CategoryManager } from './CategoryManager';
 import { cn } from '../lib/utils';
-import { LayoutGrid, User, Settings as SettingsIcon, Calendar } from 'lucide-react';
+import { LayoutGrid, User, Settings as SettingsIcon, Calendar, LogOut } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import { Button } from './ui/button';
 import { useMoneyLedger } from '../store/useStore';
 import { translations } from '../lib/i18n';
@@ -12,6 +13,21 @@ export function SettingsPage() {
     const { language, setLanguage, dateFormat, setDateFormat, currency, setCurrency, user } = useMoneyLedger();
     const t = translations[language];
     const [activeSetting, setActiveSetting] = useState<'general' | 'categories' | 'profile'>('general');
+    const [loggingOut, setLoggingOut] = useState(false);
+
+    const handleLogout = async () => {
+        if (!confirm(t.confirmLogout)) return;
+
+        try {
+            setLoggingOut(true);
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            // The App component will detect session change and redirect to Auth
+        } catch (error) {
+            console.error('Error logging out:', error);
+            setLoggingOut(false);
+        }
+    };
 
     const dateFormats: DateFormat[] = ['yyyy-MM-dd', 'dd/MM/yyyy', 'MM/dd/yyyy', 'yyyy. MM. dd.'];
     const today = new Date();
@@ -147,6 +163,18 @@ export function SettingsPage() {
                             </div>
                             <div className="text-xs text-muted-foreground">
                                 User ID: {user?.id}
+                            </div>
+
+                            <div className="pt-6 border-t">
+                                <Button
+                                    variant="destructive"
+                                    className="w-full sm:w-auto"
+                                    onClick={handleLogout}
+                                    disabled={loggingOut}
+                                >
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    {loggingOut ? t.loggingOut : t.logout}
+                                </Button>
                             </div>
                         </div>
                     )}

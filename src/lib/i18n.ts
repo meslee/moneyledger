@@ -79,6 +79,9 @@ export const translations = {
         less: "less",
         biggestIncrease: "Biggest Increase",
         categoryBreakdownDesc: "Stacked view to see category breakdown over time.",
+        logout: "Log Out",
+        confirmLogout: "Are you sure you want to log out?",
+        loggingOut: "Logging out...",
     },
     ko: {
         // Layout & Navigation
@@ -159,5 +162,8 @@ export const translations = {
         less: "감소",
         biggestIncrease: "최대 증가",
         categoryBreakdownDesc: "카테고리별 지출 누적 그래프",
+        logout: "로그아웃",
+        confirmLogout: "로그아웃 하시겠습니까?",
+        loggingOut: "로그아웃 중...",
     }
 };

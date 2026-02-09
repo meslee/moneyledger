@@ -195,9 +195,10 @@ export function MoneyLedgerProvider({ children }: { children: React.ReactNode })
 
                         // Prepare payload: Strip 'id' if it exists (for DEFAULT_CATEGORIES) and add user_id
                         const seedPayload = seedSource.map((c: any) => {
-                            const { id, ...rest } = c; // drop 'id' if present so DB generates UUID
+                            const { id, isActive, ...rest } = c; // drop 'id' if present so DB generates UUID
                             return {
                                 ...rest,
+                                is_active: isActive ?? true,
                                 user_id: user.id
                             };
                         });
@@ -270,16 +271,29 @@ export function MoneyLedgerProvider({ children }: { children: React.ReactNode })
                     localStorage.setItem('moneyledger_dateFormat', profile.date_format);
                 }
             } else {
-                // If no profile exists, create one with current defaults (or local storage values)
-                // This ensures we have a row to update later
-                // We use upsert to be safe against race conditions
+                // If no profile exists, create one with NEW defaults as requested: English, AUD, dd/MM/yyyy
+                const defaultLang: Language = 'en';
+                const defaultCurr: Currency = 'AUD';
+                const defaultFmt: DateFormat = 'dd/MM/yyyy';
+
                 await supabase.from('profiles').upsert({
                     id: user.id,
-                    language: language, // use current state (from local storage defaults)
-                    currency: currency,
-                    date_format: dateFormat,
+                    language: defaultLang,
+                    currency: defaultCurr,
+                    date_format: defaultFmt,
                     updated_at: new Date()
                 });
+
+                // Update local state to match these new defaults immediately
+                // This ensures the UI reflects the new profile settings right away
+                setLanguageState(defaultLang);
+                localStorage.setItem('moneyledger_language', defaultLang);
+
+                setCurrencyState(defaultCurr);
+                localStorage.setItem('moneyledger_currency', defaultCurr);
+
+                setDateFormatState(defaultFmt);
+                localStorage.setItem('moneyledger_dateFormat', defaultFmt);
             }
 
             setData({
